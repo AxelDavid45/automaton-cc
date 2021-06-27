@@ -15,7 +15,8 @@ int main () {
     // Check whether the expression has white-spaces
     for (int i = 0; i < userInput.length(); i++) {
         if (isspace(userInput[i]) != 0) {
-            fprintf(stderr, "Espacios no permitidos\n");
+            cout<<"Invalid expression\n";
+            fprintf(stderr, "Whitespaces not allowed\n");
             exit(-1);
         }
     }
@@ -34,6 +35,7 @@ int main () {
                     expression[i] = userInput[i];
                 } else if (userInput[i] == '.') {
                     if (foundPoint) {
+                        cout<<"Invalid expression\n";
                         printf("Unexpected token: %c\n", userInput[i]);
                         exit(-1);
                     }
@@ -42,7 +44,7 @@ int main () {
                     expressionReset = true;
                     expression = "";
                 } else {
-                    isValid = false;
+                    cout<<"Invalid expression\n";
                     printf("Unexpected token: %c\n", userInput[i]);
                     exit(-1);
                 }
@@ -54,6 +56,7 @@ int main () {
             if (!expressionReset) {
                 int expressionInt = stoi(expression);
                 if ((expressionInt % 2) != 0) {
+                    cout<<"Invalid expression\n";
                     printf("Invalid number: %i\n", expressionInt);
                     exit(-1);
                 }
@@ -70,7 +73,7 @@ int main () {
         bool isAtSymbol = false;
         bool isDotSymbol = false;
 
-        regex validCharacter("[a-z0-9_]+");
+        regex validCharacter("[a-z0-9-_]+");
 
         // Concat right side of the expression
         for (int i = 0; i <= userInput.length() - 1; i++) {
@@ -86,6 +89,7 @@ int main () {
                 temp += userInput[i];
                 cout<<"valor: "<<temp<< "\n";
                 if (!regex_match(temp, validCharacter)) {
+                    cout<<"Invalid expression\n";
                     cout<<"Unexpected token "<<userInput[i];
                     exit(-1);
                 }
@@ -98,7 +102,25 @@ int main () {
         }
 
         if (isDotSymbol) {
-            cout<<"is dot symbol";
+            temp = "";
+            cout<<"is dot symbol\n";
+            regex lettersAndNumbers("[a-z0-9]+");
+            for (int i = position; i < userInput.length(); i++) {
+                temp += userInput[i];
+                if (!regex_match(temp, lettersAndNumbers)) {
+                    cout<<"Invalid expression";
+                    cout<<"Unexpected token "<<userInput[i];
+                    exit(-1);
+                }
+            }
+            // Validate if a valid extension
+            regex fileExtensions("mp4|jp(e)?g|png|gif");
+            if (!regex_match(temp, fileExtensions)) {
+                cout<<"Invalid expression";
+                exit(-1);
+            }
+            cout<<"Valid expression :)";
+            cout<<temp;
         }
 
         // TODO: ONLY LETTERS
