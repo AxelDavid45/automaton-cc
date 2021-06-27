@@ -39,6 +39,11 @@ int main () {
                         cout<<"Unexpected token: "<<userInput[i]<<"\n";
                         exit(-1);
                     }
+                    if (userInput[i + 1] == '\000') {
+                        cout<<"Invalid expression, incomplete number\n";
+                        cout<<"Unexpected token: "<<userInput[i]<<"\n";
+                        exit(-1);
+                    }
                     foundPoint = true;
                     startingPoint = i + 1;
                     expressionReset = true;
@@ -88,6 +93,8 @@ int main () {
                     if (!regex_match(temp, validUser)) {
                         cout<<"Invalid expression\n";
                         cout<<"Unexpected token "<<userInput[i];
+
+
                         exit(-1);
                     }
                 }
@@ -100,11 +107,16 @@ int main () {
                 regex domains("(?:[a-z0-9]+\\.)+[a-z]+");
                 if (!regex_match(temp, domains)) {
                     cout<<"Invalid expression\n";
-                    cout<<"Unexpected token "<<temp;
+                    if (temp.find(" ")) {
+                        cout<<"Unexpected token: <whitespace>";
+                    } else {
+                        cout<<"Unexpected token "<<temp;
+                    }
                     exit(-1);
                 }
                 cout<<"Valid expression :)\n";
             }
+            return 0;
         } else if (dotFound != string::npos) {
             regex validUser("[a-zA-Z0-9_-]+");
             // Concat right side of the expression
@@ -130,31 +142,45 @@ int main () {
                 for (int i = position; i < userInput.length(); i++) {
                     temp += userInput[i];
                     if (!regex_match(temp, lettersAndNumbers)) {
-                        cout<<"Invalid expression";
-                        cout<<"Unexpected token "<<userInput[i];
+                        cout<<"Invalid expression\n";
+                        cout<<"Unexpected token "<<userInput[i]<<"\n";
                         exit(-1);
                     }
                 }
                 // Validate if a valid extension
                 regex fileExtensions("mp4|jp(e)?g|png|gif");
                 if (!regex_match(temp, fileExtensions)) {
-                    cout<<"Invalid expression";
+                    cout<<"Invalid expression\n";
+                    cout<<"Unexpected token "<<temp<<"\n";
                     exit(-1);
                 }
                 cout<<"Valid expression :)";
             }
+            return 0;
         } else {
-            regex onlyLetters("[a-z]+");
+            regex onlyLetters("[a-zA-Z]+");
             if (regex_match(userInput, onlyLetters)) {
                 cout<<"Valid expression :), only letters "<<userInput;
+                return 0;
             }
+            cout<<"Invalid expression\n";
+            cout<<"Unexpected token "<<userInput<<"\n";
+            return 1;
         }
     }
 
     if (firstLetter == '#') {
-        printf("es #");
+        regex hexColor(R"(#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2}))");
+        if (!regex_match(userInput, hexColor)) {
+            cout<<"Invalid expression\n";
+            exit(-1);
+        }
+        cout<<"Valid expression :)\n";
+        return 0;
     }
 
 
-    return 0;
+    cout<<"Invalid expression\n";
+    cout<<"Unexpected token "<<userInput<<"\n";
+    return 1;
 }
