@@ -16,7 +16,7 @@ int main () {
     for (int i = 0; i < userInput.length(); i++) {
         if (isspace(userInput[i]) != 0) {
             cout<<"Invalid expression\n";
-            fprintf(stderr, "Whitespaces not allowed\n");
+            cout<<"Whitespaces not allowed\n";
             exit(-1);
         }
     }
@@ -36,16 +36,16 @@ int main () {
                 } else if (userInput[i] == '.') {
                     if (foundPoint) {
                         cout<<"Invalid expression\n";
-                        printf("Unexpected token: %c\n", userInput[i]);
+                        cout<<"Unexpected token: "<<userInput[i]<<"\n";
                         exit(-1);
                     }
                     foundPoint = true;
                     startingPoint = i + 1;
                     expressionReset = true;
-                    expression = "";
+                    expression.clear();
                 } else {
                     cout<<"Invalid expression\n";
-                    printf("Unexpected token: %c\n", userInput[i]);
+                    cout<<"Unexpected token: "<<userInput[i]<<"\n";
                     exit(-1);
                 }
             }
@@ -57,76 +57,97 @@ int main () {
                 int expressionInt = stoi(expression);
                 if ((expressionInt % 2) != 0) {
                     cout<<"Invalid expression\n";
-                    printf("Invalid number: %i\n", expressionInt);
+                    cout<<"Invalid number: "<<expressionInt<<"\n";
                     exit(-1);
                 }
             }
-            printf("Valid expression :)");
+            cout<<"Valid expression :)";
         }
     }
 
     if (isalpha(firstLetter)) {
-        expression = "";
-        string temp = "";
-        // TODO: FIND @ OR DOT(.)
+        expression.clear();
+        string temp;
         int position = 0;
         bool isAtSymbol = false;
         bool isDotSymbol = false;
 
-        regex validCharacter("[a-z0-9-_]+");
+        size_t atFound = userInput.find("@");
+        size_t dotFound = userInput.find(".");
 
-        // Concat right side of the expression
-        for (int i = 0; i <= userInput.length() - 1; i++) {
-            if (userInput[i] == '@') {
-                position = i + 1;
-                isAtSymbol = true;
-                break;
-            } else if (userInput[i] == '.') {
-                position = i + 1;
-                isDotSymbol = true;
-                break;
-            } else {
-                temp += userInput[i];
-                cout<<"valor: "<<temp<< "\n";
-                if (!regex_match(temp, validCharacter)) {
+        if (atFound != string::npos) {
+            regex validUser("[a-z0-9_.]+");
+            // Concat right side of the expression
+            for (int i = 0; i < userInput.length(); i++) {
+                if (userInput[i] == '@') {
+                    position = i + 1;
+                    isAtSymbol = true;
+                    break;
+                } else {
+                    temp += userInput[i];
+                    if (!regex_match(temp, validUser)) {
+                        cout<<"Invalid expression\n";
+                        cout<<"Unexpected token "<<userInput[i];
+                        exit(-1);
+                    }
+                }
+                position++;
+            }
+
+            if (isAtSymbol) {
+                temp = userInput.substr(position, userInput.length());
+                cout<<temp<<"\n";
+                regex domains("(?:[a-z0-9]+\\.)+[a-z]+");
+                if (!regex_match(temp, domains)) {
                     cout<<"Invalid expression\n";
-                    cout<<"Unexpected token "<<userInput[i];
+                    cout<<"Unexpected token "<<temp;
                     exit(-1);
                 }
+                cout<<"Valid expression :)\n";
             }
-            position++;
-        }
+        } else if (dotFound != string::npos) {
+            regex validUser("[a-zA-Z0-9_-]+");
+            // Concat right side of the expression
+            for (int i = 0; i < userInput.length(); i++) {
+                if (userInput[i] == '.') {
+                    position = i + 1;
+                    isDotSymbol = true;
+                    break;
+                } else {
+                    temp += userInput[i];
+                    if (!regex_match(temp, validUser)) {
+                        cout<<"Invalid expression\n";
+                        cout<<"Unexpected token "<<userInput[i];
+                        exit(-1);
+                    }
+                }
+                position++;
+            }
 
-        if (isAtSymbol) {
-            cout<<"is @ symbol";
-        }
-
-        if (isDotSymbol) {
-            temp = "";
-            cout<<"is dot symbol\n";
-            regex lettersAndNumbers("[a-z0-9]+");
-            for (int i = position; i < userInput.length(); i++) {
-                temp += userInput[i];
-                if (!regex_match(temp, lettersAndNumbers)) {
+            if (isDotSymbol) {
+                temp.clear();
+                regex lettersAndNumbers("[a-z0-9]+");
+                for (int i = position; i < userInput.length(); i++) {
+                    temp += userInput[i];
+                    if (!regex_match(temp, lettersAndNumbers)) {
+                        cout<<"Invalid expression";
+                        cout<<"Unexpected token "<<userInput[i];
+                        exit(-1);
+                    }
+                }
+                // Validate if a valid extension
+                regex fileExtensions("mp4|jp(e)?g|png|gif");
+                if (!regex_match(temp, fileExtensions)) {
                     cout<<"Invalid expression";
-                    cout<<"Unexpected token "<<userInput[i];
                     exit(-1);
                 }
+                cout<<"Valid expression :)";
             }
-            // Validate if a valid extension
-            regex fileExtensions("mp4|jp(e)?g|png|gif");
-            if (!regex_match(temp, fileExtensions)) {
-                cout<<"Invalid expression";
-                exit(-1);
+        } else {
+            regex onlyLetters("[a-z]+");
+            if (regex_match(userInput, onlyLetters)) {
+                cout<<"Valid expression :), only letters "<<userInput;
             }
-            cout<<"Valid expression :)";
-            cout<<temp;
-        }
-
-        // TODO: ONLY LETTERS
-        regex onlyLetters("[a-z]+");
-        if (regex_match(temp, onlyLetters)) {
-            cout<<"Valid expression :), only letters "<<temp;
         }
     }
 
