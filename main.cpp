@@ -3,109 +3,147 @@
 #include <cstring>
 #include <cstdlib>
 #include <regex>
+
 using namespace std;
 
-char userInput[100];
-char firstLetter;
-int main () {
-    cout<<"Escribe algo:";
-    fgets(userInput, 100, stdin);
+void printMessageError(string &data) {
+    cout << "Invalid expression\n";
+    if (data.find(' ') != string::npos) {
+        cout << "Unexpected token: <whitespace>";
+    } else {
+        cout << "Unexpected token " << data;
+    }
+    exit(-1);
+}
+
+void printMessageError(char &data) {
+    cout << "Invalid expression\n";
+    cout << "Unexpected token " << data << "\n";
+    exit(-1);
+}
+
+int validateRightSideExpression(string input, char character, regex &regx) {
+    int tempPos = 0;
+    string tempString;
+    // Concat right side of the expression
+    for (int i = 0; i < input.length(); i++) {
+        if (input[i] == character) {
+            tempPos = i + 1;
+            break;
+        }
+        tempString += input[i];
+        if (!regex_match(tempString, regx)) {
+            printMessageError(input[i]);
+        }
+        tempPos++;
+    }
+    return tempPos;
+}
+
+int main() {
+    string userInput;
+
+    cout << "Write an expression: ";
+    getline(cin, userInput);
 
     // Check whether the expression has white-spaces
-    for (int i = 0; i < strlen(userInput) - 1; i++) {
-        if (isspace(userInput[i]) != 0) {
-            fprintf(stderr, "Espacios no permitidos\n");
+    for (char i : userInput) {
+        if (isspace(i) != 0) {
+            cout << "Invalid expression\n";
+            cout << "Whitespaces not allowed\n";
             exit(-1);
         }
     }
 
-    firstLetter = userInput[0];
-    char expression[100];
+    const char firstLetter = userInput[0];
+    string expression;
 
     if (isdigit(firstLetter)) {
-        bool isValid = true;
         bool expressionReset = false;
         bool foundPoint = false;
-        int startingPoint = 0;
-        while(isValid){
-            for (int i = startingPoint; i < strlen(userInput) - 1; i++) {
-                if (isdigit(userInput[i])) {
-                    expression[i] = userInput[i];
-                } else if (userInput[i] == '.') {
-                    if (foundPoint) {
-                        printf("Unexpected token: %c\n", userInput[i]);
-                        exit(-1);
-                    }
-                    foundPoint = true;
-                    startingPoint = i + 1;
-                    expressionReset = true;
-                    memset(expression,0, sizeof(expression));
-                } else {
-                    isValid = false;
-                    printf("Unexpected token: %c\n", userInput[i]);
-                    exit(-1);
+        for (int i = 0; i < userInput.length(); i++) {
+            if (isdigit(userInput[i])) {
+                expression += userInput[i];
+            } else if (userInput[i] == '.') {
+                if (foundPoint) {
+                    printMessageError(userInput[i]);
                 }
-            }
-            isValid = false;
-
-            // Determine if the expression is an even number
-            if (!expressionReset) {
-                int expressionInt = atol(expression);
-                if ((expressionInt % 2) != 0) {
-                    printf("Invalid number: %i\n", expressionInt);
-                    exit(-1);
+                if (userInput[i + 1] == '\000') {
+                    cout << "Incomplete number\n";
+                    printMessageError(userInput[i]);
                 }
+                foundPoint = true;
+                expressionReset = true;
+                expression.clear();
+            } else {
+                printMessageError(userInput[i]);
             }
-            printf("Valid expression :)");
         }
+
+        // Determine if the expression is an even number
+        if (!expressionReset) {
+            int expressionInt = stoi(expression);
+            if ((expressionInt % 2) != 0) {
+                printMessageError(expression);
+            }
+        }
+        cout << "Valid expression :)";
+        return 0;
     }
 
     if (isalpha(firstLetter)) {
-        memset(expression,0, sizeof(expression));
-        // TODO: FIND @ OR DOT(.)
-        int position = 0;
-        bool isAtSymbol = false;
-        bool isDotSymbol = false;
+        expression.clear();
+        string tempString;
+        int position;
+        size_t atFound = userInput.find('@');
+        size_t dotFound = userInput.find('.');
 
-        regex onlyLetters("[a-z0-9_]");
-
-        // Concat right side of the expression
-        for (int i = 0; i <= strlen(userInput) - 1; i++) {
-            if (userInput[i] == '@') {
-                position = i + 1;
-                isAtSymbol = true;
-                break;
-            } else if (userInput[i] == '.') {
-                position = i + 1;
-                isDotSymbol = true;
-                break;
-            } else {
-                string temp = reinterpret_cast<const char *>(userInput[i]);
-                cout<<"valor: "<<temp<< "\n";
-                if (regex_match(temp, onlyLetters)) {
-                    cout<<"valor:\n";
-                } else {
-                    cout<<"noentro\n";
+        if (atFound != string::npos) {
+            regex validUser("[a-z0-9_.]+");
+            position = validateRightSideExpression(userInput, '@', validUser);
+            tempString = userInput.substr(position, userInput.length());
+            regex domains("(?:[a-z0-9]+\\.)+[a-z]+");
+            if (!regex_match(tempString, domains)) {
+                printMessageError(tempString);
+            }
+            cout << "Valid expression :)\n";
+            return 0;
+        } else if (dotFound != string::npos) {
+            regex validFilename("[a-zA-Z0-9_-]+");
+            position = validateRightSideExpression(userInput, '.', validFilename);
+            tempString.clear();
+            regex lettersAndNumbers("[a-z0-9]+");
+            for (int i = position; i < userInput.length(); i++) {
+                tempString += userInput[i];
+                if (!regex_match(tempString, lettersAndNumbers)) {
+                    printMessageError(userInput[i]);
                 }
             }
-            position++;
-        }
 
-        if (isAtSymbol) {
-            // TODO
+            regex fileExtensions("mp4|jp(e)?g|png|gif");
+            if (!regex_match(tempString, fileExtensions)) {
+                printMessageError(tempString);
+            }
+            cout << "Valid expression :)";
+            return 0;
+        } else {
+            regex onlyLetters("[a-zA-Z]+");
+            if (regex_match(userInput, onlyLetters)) {
+                cout << "Valid expression :), only letters " << userInput;
+                return 0;
+            }
+            printMessageError(userInput);
         }
-
-        if (isDotSymbol) {
-            // TODO
-        }
-
-        // TODO: ONLY LETTERS
     }
 
     if (firstLetter == '#') {
-        printf("es #");
+        regex hexColor(R"(#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2}))");
+        if (!regex_match(userInput, hexColor)) {
+            printMessageError(userInput);
+        }
+        cout << "Valid expression :)\n";
+        return 0;
     }
 
-
-    return 0;
+    printMessageError(userInput);
 }
